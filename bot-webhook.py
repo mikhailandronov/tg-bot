@@ -1,6 +1,5 @@
 import os
 import logging
-from datetime import datetime
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 from dotenv import load_dotenv
@@ -16,7 +15,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:  # noqa: ARG001 (unused context)
     """Handle the /start command."""
     welcome_message = (
         "👋 Hello! I'm a simple echo bot with metadata.\n\n"
@@ -26,7 +25,7 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
     await update.message.reply_text(welcome_message)
 
 
-async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:  # noqa: ARG001 (unused context)
     """Handle incoming text messages and reply with metadata."""
     message = update.message
 
