@@ -17,17 +17,22 @@ logger = logging.getLogger(__name__)
 
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:  # noqa: ARG001 (unused context)
     """Handle the /start command."""
+    message = update.message
+    assert message is not None  # CommandHandler guarantees message exists
     welcome_message = (
         "👋 Hello! I'm a simple echo bot with metadata.\n\n"
         "Send me any message and I'll reply with confirmation "
         "including metadata about your message."
     )
-    await update.message.reply_text(welcome_message)
+    await message.reply_text(welcome_message)
 
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:  # noqa: ARG001 (unused context)
     """Handle incoming text messages and reply with metadata."""
     message = update.message
+    assert message is not None  # filters.TEXT guarantees message exists
+    assert message.from_user is not None
+    assert message.chat is not None
 
     # Extract metadata
     metadata = {
@@ -60,9 +65,9 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     logger.info(f"Received message from {metadata['from_user.username']} ({metadata['from_user.id']})")
 
 
-async def error_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def error_handler(update: object | None, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Handle errors."""
-    logger.error(f"Update {update} caused error {context.error}")
+    logger.error(f"Update {update} caused error {context.error}")  # type: ignore[attr-defined]
 
 
 def main() -> None:
