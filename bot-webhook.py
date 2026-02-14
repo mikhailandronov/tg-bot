@@ -21,7 +21,7 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
     assert message is not None  # CommandHandler guarantees message exists
     welcome_message = (
         "👋 Hello! I'm a simple echo bot with metadata.\n\n"
-        "Send me any message and I'll reply with confirmation "
+        "Send me any message or location and I'll reply with confirmation "
         "including metadata about your message."
     )
     await message.reply_text(welcome_message)
@@ -65,6 +65,52 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     logger.info(f"Received message from {metadata['from_user.username']} ({metadata['from_user.id']})")
 
 
+async def handle_location(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:  # noqa: ARG001 (unused context)
+    """Handle location messages and reply with location metadata."""
+    message = update.message
+    assert message is not None  # filters.LOCATION guarantees message exists
+    assert message.from_user is not None
+    assert message.chat is not None
+    assert message.location is not None
+
+    # Extract location metadata
+    metadata = {
+        'message_id': message.message_id,
+        'from_user.id': message.from_user.id,
+        'from_user.username': message.from_user.username or 'N/A',
+        'from_user.first_name': message.from_user.first_name,
+        'chat.id': message.chat.id,
+        'date': message.date.strftime('%Y-%m-%d %H:%M:%S') if message.date else 'N/A',
+        'latitude': message.location.latitude,
+        'longitude': message.location.longitude,
+        'heading': message.location.heading or 'N/A',
+        'horizontal_accuracy': message.location.horizontal_accuracy or 'N/A'
+    }
+
+    # Format response message
+    response = (
+        "📍 Location received!\n\n"
+        "📊 Metadata:\n"
+        f"• Message ID: {metadata['message_id']}\n"
+        f"• User ID: {metadata['from_user.id']}\n"
+        f"• Username: @{metadata['from_user.username']}\n"
+        f"• First Name: {metadata['from_user.first_name']}\n"
+        f"• Chat ID: {metadata['chat.id']}\n"
+        f"• Timestamp: {metadata['date']}\n\n"
+        f"🌍 Location:\n"
+        f"• Latitude: {metadata['latitude']}\n"
+        f"• Longitude: {metadata['longitude']}\n"
+        f"• Heading: {metadata['heading']}\n"
+        f"• Accuracy: {metadata['horizontal_accuracy']} m"
+    )
+
+    # Reply with confirmation and metadata
+    await message.reply_text(response)
+
+    # Log the message
+    logger.info(f"Received location from {metadata['from_user.username']} ({metadata['from_user.id']})")
+
+
 async def error_handler(update: object | None, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Handle errors."""
     logger.error(f"Update {update} caused error {context.error}")  # type: ignore[attr-defined]
@@ -96,6 +142,7 @@ def main() -> None:
     # Register handlers
     application.add_handler(CommandHandler("start", start_command))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+    application.add_handler(MessageHandler(filters.LOCATION, handle_location))
     application.add_error_handler(error_handler)
 
     # Start the bot with webhook
